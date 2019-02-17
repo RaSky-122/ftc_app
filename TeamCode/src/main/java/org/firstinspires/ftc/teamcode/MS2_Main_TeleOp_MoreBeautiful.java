@@ -140,9 +140,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             int armPosition = armMotor.getCurrentPosition();
             int liftPosition = liftMotor.getCurrentPosition();
 
-            if(-gamepad2.right_stick_y > 0 && ((liftPosition <= 5000 || gamepad2.left_bumper) && ((Math.abs(armPosition) >= 800 && liftPosition <= 2900) || Math.abs(armPosition) >= 1000)))
+            if(-gamepad2.right_stick_y > 0 && (liftMotor.getCurrentPosition() < 5900 || gamepad2.left_bumper) && ((Math.abs(armPosition) >= 800 && liftPosition <= 2900) || Math.abs(armPosition) >= 1000))
                 liftMotor.setPower(1);
-            else if (-gamepad2.right_stick_y < 0 && ((liftPosition >= 0 || gamepad2.left_bumper)))
+            else if (-gamepad2.right_stick_y < 0 && ((liftPosition > 0 || gamepad2.left_bumper)))
                 liftMotor.setPower(-1);
             else liftMotor.setPower(0);
 
@@ -206,6 +206,8 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
             frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
