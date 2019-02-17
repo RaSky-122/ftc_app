@@ -35,6 +35,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     private DcMotor armBaseMotor;
     private Servo armBoxServo;
     private Servo armBoxServo2;
+    private Servo markerServo;
     private CRServo grabServo;
     private DcMotor collectorMotor;
     private BNO055IMU imu;
@@ -71,6 +72,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         while(opModeIsActive()){
 
             servoStuff.grabServoArm();
+            servoStuff.moveMarkerServo();
             gamepad2Motors.moveArmBaseMotor();
             gamepad2Motors.moveCollectorMotor();
             servoStuff.moveBoxServo();
@@ -109,9 +111,16 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             else if (gamepad2.x)
                 grabServo.setPower(0);
         }
+
+        public void moveMarkerServo(){
+            if(gamepad1.a)
+                markerServo.setPosition(1);
+            else markerServo.setPosition(0);
+        }
     }
 
     public void smoothMovement(){
+
         frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
 
         backRightMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
@@ -130,7 +139,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             power += 0.04;
         else if(motorsOn && power > 0.8)
             power = 0.8;
-        else if(!motorsOn)
+        else if(!motorsOn && power > 0.2)
+            power -= 0.02;
+        else if(!motorsOn && power < 0.2)
             power = 0.2;
     }
 
@@ -202,6 +213,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             armBoxServo = hardwareMap.get(Servo.class, "armBoxServo");
             armBoxServo2 = hardwareMap.get(Servo.class, "armBoxServo2");
             grabServo = hardwareMap.get(CRServo.class, "grabServo");
+            markerServo = hardwareMap.get(Servo.class, "markerServo");
             collectorMotor = hardwareMap.get(DcMotor.class, "collectorMotor");
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -223,6 +235,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
             //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            collectorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            collectorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             armBaseMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             armBaseMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

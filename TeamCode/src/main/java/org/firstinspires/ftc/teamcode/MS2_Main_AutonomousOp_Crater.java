@@ -199,7 +199,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
             tfod.shutdown();
 
             while(Math.abs(armMotor.getCurrentPosition()) < 3200 && opModeIsActive())
-                armMotor.setPower(-0.3);
+                armMotor.setPower(-0.4);
         }
     }
 

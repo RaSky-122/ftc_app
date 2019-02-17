@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DigitalIoDeviceType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.HINT;
@@ -42,6 +43,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
     private DcMotor backRightMotor;
     private DcMotor liftMotor;
     private DcMotor armMotor;
+    private Servo markerServo;
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -162,7 +164,10 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             motorMovement.stop();
             sleep(200);
 
+            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
+
             while(!cubeFound && opModeIsActive()){
+
                 findingMinerals.rotateFor(80, "left", 0.2,true);
 
                 motorMovement.stop();
@@ -176,6 +181,8 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 }
             }
 
+            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(false);
+
             motorMovement.stop();
             sleep(200);
 
@@ -185,9 +192,39 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 sleep(200);
 
                 if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
-                    motorMovement.forwards(0.2, 1550);
+                    motorMovement.forwards(0.2, 1650);
+
+                    motorMovement.stop();
+                    sleep(200);
+
+                    motorMovement.backwards(0.2, 100);
+
+                    motorMovement.stop();
+                    sleep(200);
+
+                    if(Math.abs(currentGyro - initialGyro) <= 30)
+                        findingMinerals.rotateFor(40, "left", 0.2, false);
+                    else if(Math.abs(currentGyro - initialGyro) >= 50)
+                        findingMinerals.rotateFor(40, "right", 0.2, false);
                 }
-                else motorMovement.forwards(0.2, 1300);
+                else {
+                    motorMovement.forwards(0.2, 3600);
+                }
+
+                motorMovement.stop();
+                sleep(200);
+
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                sleep(300);
+
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                sleep(300);
 
                 motorMovement.stop();
                 wheelEncoder.stop();
@@ -312,6 +349,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
             liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
             armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+            markerServo = hardwareMap.get(Servo.class, "markerServo");
 
             frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
             backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
