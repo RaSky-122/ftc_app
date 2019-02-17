@@ -133,7 +133,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
                 armMotor.setPower(-0.3);
             armMotor.setPower(0);
 
-            while(Math.abs(liftMotor.getCurrentPosition()) <= 4800 && opModeIsActive()) {
+            while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
                 telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
                 telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
@@ -321,6 +321,8 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
             frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
