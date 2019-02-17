@@ -185,9 +185,9 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 sleep(200);
 
                 if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
-                    motorMovement.forwards(0.2, 1500);
+                    motorMovement.forwards(0.2, 1550);
                 }
-                else motorMovement.forwards(0.2, 1250);
+                else motorMovement.forwards(0.2, 1300);
 
                 motorMovement.stop();
                 wheelEncoder.stop();
@@ -377,9 +377,9 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             //gamepad1.dpad_up
             int initialEncoder = frontRightMotor.getCurrentPosition();
             while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
-                frontLeftMotor.setPower(power);
+                frontLeftMotor.setPower(power * 1.3);
                 frontRightMotor.setPower(power);
-                backLeftMotor.setPower(power);
+                backLeftMotor.setPower(power * 1.3);
                 backRightMotor.setPower(power);
             }
         }
@@ -387,9 +387,9 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             //gamepad1.dpad_down
             int initialEncoder = frontRightMotor.getCurrentPosition();
             while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
-                frontLeftMotor.setPower(-power);
+                frontLeftMotor.setPower(-power * 1.3);
                 frontRightMotor.setPower(-power);
-                backLeftMotor.setPower(-power);
+                backLeftMotor.setPower(-power * 1.3);
                 backRightMotor.setPower(-power);
             }
         }
