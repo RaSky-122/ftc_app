@@ -46,6 +46,8 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     double distance = 0;
     double auxDistance;
 
+    double savedGyro = 0;
+
     double movementTime = 0;
 
     ElapsedTime runTime;
@@ -71,6 +73,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
         while(opModeIsActive()){
 
+            if(gamepad1.b)
+                savedGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+
             servoStuff.grabServoArm();
             servoStuff.moveMarkerServo();
             gamepad2Motors.moveArmBaseMotor();
@@ -83,7 +88,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
             telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
             telemetry.addData("Arm Base Encoder ", armBaseMotor.getCurrentPosition());
-            telemetry.addData("Collector Motor Time ", movementTime);
+            telemetry.addData("Collector Motor Encoder ", collectorMotor.getCurrentPosition());
+            telemetry.addData("Current Gyro ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle);
+            telemetry.addData("Saved Gyro ", savedGyro);
             telemetry.update();
         }
 

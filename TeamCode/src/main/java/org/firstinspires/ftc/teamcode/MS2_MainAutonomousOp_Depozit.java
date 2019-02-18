@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DigitalIoDeviceType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.vuforia.HINT;
@@ -30,7 +31,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.List;
 
-@Autonomous(name = "Depozit", group = "Main")
+@Autonomous(name = "Depozit", group = "Learning")
 
 public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
 
@@ -42,6 +43,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
     private DcMotor backRightMotor;
     private DcMotor liftMotor;
     private DcMotor armMotor;
+    private Servo markerServo;
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -135,9 +137,6 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
 
             while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
-                telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
-                telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
-                telemetry.update();
             }
 
             armMotor.setPower(0);
@@ -162,7 +161,10 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             motorMovement.stop();
             sleep(200);
 
+            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
+
             while(!cubeFound && opModeIsActive()){
+
                 findingMinerals.rotateFor(80, "left", 0.2,true);
 
                 motorMovement.stop();
@@ -176,6 +178,8 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 }
             }
 
+            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(false);
+
             motorMovement.stop();
             sleep(200);
 
@@ -184,10 +188,48 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 wheelEncoder.start();
                 sleep(200);
 
-                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
-                    motorMovement.forwards(0.2, 1550);
+                if(Math.abs(currentGyro - initialGyro) <= 20 || Math.abs(currentGyro - initialGyro) >= 60){
+                    motorMovement.forwards(0.2, 2600);
+
+                    motorMovement.stop();
+                    wheelEncoder.stop();
+                    sleep(200);
+
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+
+                    if(currentGyro > originGyro)
+                        findingMinerals.rotateFor(53, "right", 0.3, false);
+                    else findingMinerals.rotateFor(53, "left", 0.3, false);
+
+                    motorMovement.stop();
+                    wheelEncoder.start();
+                    sleep(200);
+
+                    motorMovement.forwards(0.3, 2200);
+
+                    motorMovement.stop();
+                    wheelEncoder.stop();
+                    sleep(200);
                 }
-                else motorMovement.forwards(0.2, 1300);
+                else {
+                    motorMovement.forwards(0.2, 3600);
+                    wheelEncoder.stop();
+                }
+
+                motorMovement.stop();
+                sleep(200);
+
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                sleep(300);
+
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                sleep(300);
 
                 motorMovement.stop();
                 wheelEncoder.stop();
@@ -312,6 +354,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
             liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
             armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+            markerServo = hardwareMap.get(Servo.class, "markerServo");
 
             frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
             backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);

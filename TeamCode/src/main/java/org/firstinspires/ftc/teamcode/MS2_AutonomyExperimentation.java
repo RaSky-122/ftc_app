@@ -137,9 +137,6 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
             while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
-                telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
-                telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
-                telemetry.update();
             }
 
             armMotor.setPower(0);
@@ -191,24 +188,32 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 wheelEncoder.start();
                 sleep(200);
 
-                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
-                    motorMovement.forwards(0.2, 1650);
+                if(Math.abs(currentGyro - initialGyro) <= 20 || Math.abs(currentGyro - initialGyro) >= 60){
+                    motorMovement.forwards(0.2, 2600);
 
                     motorMovement.stop();
+                    wheelEncoder.stop();
                     sleep(200);
 
-                    motorMovement.backwards(0.2, 100);
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+
+                    if(currentGyro > originGyro)
+                        findingMinerals.rotateFor(53, "right", 0.3, false);
+                    else findingMinerals.rotateFor(53, "left", 0.3, false);
 
                     motorMovement.stop();
+                    wheelEncoder.start();
                     sleep(200);
 
-                    if(Math.abs(currentGyro - initialGyro) <= 30)
-                        findingMinerals.rotateFor(40, "left", 0.2, false);
-                    else if(Math.abs(currentGyro - initialGyro) >= 50)
-                        findingMinerals.rotateFor(40, "right", 0.2, false);
+                    motorMovement.forwards(0.3, 2200);
+
+                    motorMovement.stop();
+                    wheelEncoder.stop();
+                    sleep(200);
                 }
                 else {
                     motorMovement.forwards(0.2, 3600);
+                    wheelEncoder.stop();
                 }
 
                 motorMovement.stop();
@@ -224,11 +229,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                     markerServo.setPosition(0);
                 else markerServo.setPosition(1);
 
-                sleep(300);
-
-                motorMovement.stop();
-                wheelEncoder.stop();
-                sleep(200);
+                findingMinerals.rotateTo(135, 0.3);
             }
 
             motorMovement.stop();
@@ -260,9 +261,9 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
             while((currentGyro < targetAngle || currentGyro > targetAngle) && opModeIsActive()){
 
-                if(currentGyro < targetAngle)
+                if(currentGyro > targetAngle)
                     movingMotor.rotateRight(rPower);
-                else if(currentGyro > targetAngle)
+                else if(currentGyro < targetAngle)
                     movingMotor.rotateLeft(rPower);
                 else movingMotor.stop();
             }
