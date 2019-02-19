@@ -136,7 +136,6 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
         backLeftMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power+gamepad1.right_stick_x/2);
 
-
         boolean motorsOn = false;
 
         if(gamepad1.left_stick_x != 0 || gamepad1.left_stick_y != 0 || gamepad1.right_stick_x != 0)
@@ -146,9 +145,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             power += 0.04;
         else if(motorsOn && power > 0.8)
             power = 0.8;
-        else if(!motorsOn && power > 0.2)
-            power -= 0.02;
-        else if(!motorsOn && power < 0.2)
+        else if(!motorsOn)
             power = 0.2;
     }
 
@@ -196,10 +193,10 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         public void moveCollectorMotor(){
 
             if(gamepad2.dpad_up) {
-                collectorMotor.setPower(0.5);
+                collectorMotor.setPower(1);
             }
             else if(gamepad2.dpad_down) {
-                collectorMotor.setPower(-0.5);
+                collectorMotor.setPower(-1);
             }
             else {
                 collectorMotor.setPower(0);
@@ -225,6 +222,8 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+            backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
             liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 

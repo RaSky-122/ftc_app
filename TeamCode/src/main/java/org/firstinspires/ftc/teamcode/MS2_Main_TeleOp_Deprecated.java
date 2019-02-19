@@ -156,7 +156,7 @@ public class MS2_Main_TeleOp_Deprecated extends LinearOpMode {
     }
 
     public void movingMotors(){
-        /*
+
         MovingMotor direction = new MovingMotor();
         boolean motorsOn = false;
 
@@ -192,14 +192,6 @@ public class MS2_Main_TeleOp_Deprecated extends LinearOpMode {
             motorsOn = direction.RotateRight(power);
 
         else motorsOn = direction.Stop();
-
-        if(motorsOn && power < 0.5)
-            power += 0.04;
-        else if(motorsOn && power >= 0.5)
-            power = 0.5;
-        else if(!motorsOn)
-            power = 0.2;
-        */
     }
 
     public void moveArms(){

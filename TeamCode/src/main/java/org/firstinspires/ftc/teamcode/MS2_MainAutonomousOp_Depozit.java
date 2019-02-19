@@ -188,7 +188,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 wheelEncoder.start();
                 sleep(200);
 
-                if(Math.abs(currentGyro - initialGyro) <= 20 || Math.abs(currentGyro - initialGyro) >= 60){
+                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
                     motorMovement.forwards(0.2, 2600);
 
                     motorMovement.stop();
@@ -301,6 +301,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
+
         private void start(){
             frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -417,7 +418,6 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             backRightMotor.setPower(0);
         }
         public void forwards(double power, int targetEncoder) {
-            //gamepad1.dpad_up
             int initialEncoder = frontRightMotor.getCurrentPosition();
             while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
                 frontLeftMotor.setPower(power * 1.3);

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.*;
 
-@Autonomous(name = "TensorFlowJustGold", group = "Learning")
+@TeleOp(name = "TensorFlowJustGold", group = "Learning")
 
 public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
 
@@ -23,6 +24,13 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
     private DcMotor lowerLeftMotor;*/
 
     double power = 0.25;
+
+    private DcMotor frontRightMotor;
+    private DcMotor frontLeftMotor;
+    private DcMotor backRightMotor;
+    private DcMotor backLeftMotor;
+
+
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -36,6 +44,16 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+        frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor");
+        frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
+        backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
+        backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
+
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         /*upperLeftMotor = hardwareMap.get(DcMotor.class, "upperLeftMotor");
         upperRightMotor = hardwareMap.get(DcMotor.class, "upperRightMotor");
@@ -58,7 +76,11 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                 tfod.activate();
             }
         }
+        com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
+
         while (opModeIsActive()) {
+
+            smoothMovement();
 
             if (tfod != null) {
                 int positionGold;
@@ -66,7 +88,7 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                 if(updatedRecognitions != null){
                     for(Recognition recognition : updatedRecognitions) {
                         if (recognition.getLabel().equals(LABEL_GOLD_MINERAL) && recognition.getTop() > 600 && recognition.getLeft() > 250) {
-                            telemetry.addData("Uita-l ba", "yay " + recognition.getLeft());
+                            telemetry.addData("Uita-l ba", "yay " + recognition.getLeft() + " " + recognition.getTop());
                             telemetry.update();
 
                             /*positionGold = (int) recognition.getLeft();
@@ -88,7 +110,7 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                             }*/
                         }
                         else {
-                            telemetry.addData("Your princess is in another castle ", "hah " + recognition.getLeft());
+                            telemetry.addData("Your princess is in another castle ", "hah " + recognition.getLeft() + " " + recognition.getTop());
                             telemetry.update();
                         }
 
@@ -126,4 +148,28 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
             tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
             tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_GOLD_MINERAL, LABEL_SILVER_MINERAL);
         }
+
+
+    public void smoothMovement(){
+
+        frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
+
+        backRightMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
+
+        frontRightMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power-gamepad1.right_stick_x/2);
+
+        backLeftMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power+gamepad1.right_stick_x/2);
+
+        boolean motorsOn = false;
+
+        if(gamepad1.left_stick_x != 0 || gamepad1.left_stick_y != 0 || gamepad1.right_stick_x != 0)
+            motorsOn = true;
+
+        if(motorsOn && power < 0.8)
+            power += 0.04;
+        else if(motorsOn && power > 0.8)
+            power = 0.8;
+        else if(!motorsOn)
+            power = 0.2;
+    }
 }

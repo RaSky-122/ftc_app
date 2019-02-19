@@ -188,8 +188,8 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 wheelEncoder.start();
                 sleep(200);
 
-                if(Math.abs(currentGyro - initialGyro) <= 20 || Math.abs(currentGyro - initialGyro) >= 60){
-                    motorMovement.forwards(0.2, 2600);
+                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 60){
+                    motorMovement.forwards(0.2, 2300);
 
                     motorMovement.stop();
                     wheelEncoder.stop();
@@ -205,31 +205,40 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                     wheelEncoder.start();
                     sleep(200);
 
-                    motorMovement.forwards(0.3, 2200);
+                    motorMovement.forwards(0.3, 2000);
 
                     motorMovement.stop();
                     wheelEncoder.stop();
                     sleep(200);
                 }
                 else {
-                    motorMovement.forwards(0.2, 3600);
+                    motorMovement.forwards(0.2, 4200);
+                    motorMovement.stop();
                     wheelEncoder.stop();
+                    sleep(200);
                 }
 
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                sleep(500);
+
+                if(markerServo.getPosition() > 0.9)
+                    markerServo.setPosition(0);
+                else markerServo.setPosition(1);
+
+                findingMinerals.rotateTo(100, 0.3);
+
                 motorMovement.stop();
+                wheelEncoder.start();
                 sleep(200);
 
-                if(markerServo.getPosition() > 0.9)
-                    markerServo.setPosition(0);
-                else markerServo.setPosition(1);
+                motorMovement.forwards(0.3, 1100);
 
-                sleep(300);
-
-                if(markerServo.getPosition() > 0.9)
-                    markerServo.setPosition(0);
-                else markerServo.setPosition(1);
-
-                findingMinerals.rotateTo(135, 0.3);
+                motorMovement.stop();
+                wheelEncoder.stop();
+                sleep(200);
             }
 
             motorMovement.stop();
@@ -259,13 +268,17 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
             currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES). firstAngle;
 
-            while((currentGyro < targetAngle || currentGyro > targetAngle) && opModeIsActive()){
-
-                if(currentGyro > targetAngle)
-                    movingMotor.rotateRight(rPower);
-                else if(currentGyro < targetAngle)
+            if(currentGyro < targetAngle){
+                while(currentGyro < targetAngle && opModeIsActive()){
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
                     movingMotor.rotateLeft(rPower);
-                else movingMotor.stop();
+                }
+            }
+            else if(currentGyro > targetAngle){
+                while(currentGyro > targetAngle && opModeIsActive()){
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+                    movingMotor.rotateRight(rPower);
+                }
             }
         }
 
@@ -314,7 +327,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                     goldPositionLeft = (int) recognition.getLeft();
                     goldPositionTop = (int) recognition.getTop();
-                    if(!cubeFound && recognition.getTop() > 600 && recognition.getLeft() > 380) {
+                    if(!cubeFound && recognition.getTop() < 1000 && recognition.getLeft() > 480) { /** get left= 460 get top = 760 **/
                         cubeFound = true;
                         return true;
                     }
@@ -354,7 +367,6 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
             frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
             backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
