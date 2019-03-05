@@ -43,6 +43,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
     private DcMotor backRightMotor;
     private DcMotor liftMotor;
     private DcMotor armMotor;
+    private DcMotor collectorMotor;
     private Servo markerServo;
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
@@ -135,6 +136,10 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 armMotor.setPower(-0.3);
             armMotor.setPower(0);
 
+            while(collectorMotor.getCurrentPosition() > -680 && opModeIsActive())
+                collectorMotor.setPower(-1);
+            collectorMotor.setPower(0);
+
             while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
             }
@@ -161,34 +166,29 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             motorMovement.stop();
             sleep(200);
 
-            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
-
             while(!cubeFound && opModeIsActive()){
 
-                findingMinerals.rotateFor(80, "left", 0.2,true);
+                findingMinerals.rotateFor(90, "left", 0.2,true);
 
                 motorMovement.stop();
                 sleep(200);
 
                 if(!cubeFound && opModeIsActive()) {
-                    findingMinerals.rotateFor(80, "right", 0.2, true);
+                    findingMinerals.rotateFor(90, "right", 0.2, true);
 
                     motorMovement.stop();
                     sleep(200);
                 }
             }
 
-            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(false);
-
             motorMovement.stop();
             sleep(200);
 
             if(cubeFound){
-                motorMovement.stop();
                 wheelEncoder.start();
                 sleep(200);
 
-                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
+                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 60){
                     motorMovement.forwards(0.2, 2600);
 
                     motorMovement.stop();
@@ -205,14 +205,14 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                     wheelEncoder.start();
                     sleep(200);
 
-                    motorMovement.forwards(0.3, 2200);
+                    motorMovement.forwards(0.3, 2000);
 
                     motorMovement.stop();
                     wheelEncoder.stop();
                     sleep(200);
                 }
                 else {
-                    motorMovement.forwards(0.2, 3600);
+                    motorMovement.forwards(0.2, 3300);
                     wheelEncoder.stop();
                 }
 
@@ -223,13 +223,19 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                     markerServo.setPosition(0);
                 else markerServo.setPosition(1);
 
-                sleep(300);
+                sleep(500);
 
                 if(markerServo.getPosition() > 0.9)
                     markerServo.setPosition(0);
                 else markerServo.setPosition(1);
 
-                sleep(300);
+                findingMinerals.rotateTo(120, 0.3);
+
+                motorMovement.stop();
+                wheelEncoder.start();
+                sleep(200);
+
+                motorMovement.forwards(0.3, 500);
 
                 motorMovement.stop();
                 wheelEncoder.stop();
@@ -263,13 +269,17 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
 
             currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES). firstAngle;
 
-            while((currentGyro < targetAngle || currentGyro > targetAngle) && opModeIsActive()){
-
-                if(currentGyro < targetAngle)
-                    movingMotor.rotateRight(rPower);
-                else if(currentGyro > targetAngle)
+            if(currentGyro < targetAngle){
+                while(currentGyro < targetAngle && opModeIsActive()){
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
                     movingMotor.rotateLeft(rPower);
-                else movingMotor.stop();
+                }
+            }
+            else if(currentGyro > targetAngle){
+                while(currentGyro > targetAngle && opModeIsActive()){
+                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+                    movingMotor.rotateRight(rPower);
+                }
             }
         }
 
@@ -319,7 +329,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
                 if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                     goldPositionLeft = (int) recognition.getLeft();
                     goldPositionTop = (int) recognition.getTop();
-                    if(!cubeFound && recognition.getTop() > 600 && recognition.getLeft() > 380) {
+                    if(!cubeFound && recognition.getLeft() > 300) {
                         cubeFound = true;
                         return true;
                     }
@@ -356,6 +366,7 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
             armMotor = hardwareMap.get(DcMotor.class, "armMotor");
             markerServo = hardwareMap.get(Servo.class, "markerServo");
+            collectorMotor = hardwareMap.get(DcMotor.class, "collectorMotor");
 
             frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
             backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -371,9 +382,13 @@ public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
             backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            collectorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
             liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            collectorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            collectorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

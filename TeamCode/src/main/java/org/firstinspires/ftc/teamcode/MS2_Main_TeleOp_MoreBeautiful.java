@@ -35,7 +35,6 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     private DcMotor armBaseMotor;
     private Servo armBoxServo;
     private Servo armBoxServo2;
-    private Servo markerServo;
     private CRServo grabServo;
     private DcMotor collectorMotor;
     private BNO055IMU imu;
@@ -43,22 +42,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     double power = 0.2;
     double power2 = 0.75;
 
-    double distance = 0;
-    double auxDistance;
-
     double savedGyro = 0;
 
-    double movementTime = 0;
-
-    ElapsedTime runTime;
-
-    public void setRunTime() {
-        this.runTime = new ElapsedTime();
-    }
-
     public void runOpMode(){
-
-        setRunTime();
 
         Initialize init = new Initialize();
 
@@ -73,11 +59,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
         while(opModeIsActive()){
 
-            if(gamepad1.b)
-                savedGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
-
             servoStuff.grabServoArm();
-            servoStuff.moveMarkerServo();
             gamepad2Motors.moveArmBaseMotor();
             gamepad2Motors.moveCollectorMotor();
             servoStuff.moveBoxServo();
@@ -89,8 +71,6 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
             telemetry.addData("Arm Base Encoder ", armBaseMotor.getCurrentPosition());
             telemetry.addData("Collector Motor Encoder ", collectorMotor.getCurrentPosition());
-            telemetry.addData("Current Gyro ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle);
-            telemetry.addData("Saved Gyro ", savedGyro);
             telemetry.update();
         }
 
@@ -118,14 +98,9 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             else if (gamepad2.x)
                 grabServo.setPower(0);
         }
-
-        public void moveMarkerServo(){
-            if(gamepad1.a)
-                markerServo.setPosition(1);
-            else markerServo.setPosition(0);
-        }
     }
 
+    
     public void smoothMovement(){
 
         frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
@@ -217,7 +192,6 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             armBoxServo = hardwareMap.get(Servo.class, "armBoxServo");
             armBoxServo2 = hardwareMap.get(Servo.class, "armBoxServo2");
             grabServo = hardwareMap.get(CRServo.class, "grabServo");
-            markerServo = hardwareMap.get(Servo.class, "markerServo");
             collectorMotor = hardwareMap.get(DcMotor.class, "collectorMotor");
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);

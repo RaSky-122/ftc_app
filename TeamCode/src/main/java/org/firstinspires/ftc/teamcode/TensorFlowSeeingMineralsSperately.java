@@ -76,7 +76,6 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                 tfod.activate();
             }
         }
-        com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
 
         while (opModeIsActive()) {
 
@@ -120,7 +119,6 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
         }
         if(tfod != null)
             tfod.shutdown();
-        com.vuforia.CameraDevice.getInstance().setFlashTorchMode(false);
     }
 
         private void initVuforia () {

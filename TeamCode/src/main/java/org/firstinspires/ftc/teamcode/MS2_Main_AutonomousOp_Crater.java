@@ -42,6 +42,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
     private DcMotor backRightMotor;
     private DcMotor liftMotor;
     private DcMotor armMotor;
+    private DcMotor collectorMotor;
 
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
     private static final String LABEL_GOLD_MINERAL = "Gold Mineral";
@@ -133,6 +134,10 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
                 armMotor.setPower(-0.3);
             armMotor.setPower(0);
 
+            while(collectorMotor.getCurrentPosition() > -680 && opModeIsActive())
+                collectorMotor.setPower(-1);
+            collectorMotor.setPower(0);
+
             while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
                 telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
@@ -185,7 +190,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
                 sleep(200);
 
                 if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 50){
-                    motorMovement.forwards(0.2, 1550);
+                    motorMovement.forwards(0.2, 1625);
                 }
                 else motorMovement.forwards(0.2, 1300);
 
@@ -198,7 +203,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
 
             tfod.shutdown();
 
-            while(Math.abs(armMotor.getCurrentPosition()) < 3200 && opModeIsActive())
+            while(Math.abs(armMotor.getCurrentPosition()) < 2800 && opModeIsActive())
                 armMotor.setPower(-0.4);
         }
     }
@@ -279,7 +284,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
                 if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                     goldPositionLeft = (int) recognition.getLeft();
                     goldPositionTop = (int) recognition.getTop();
-                    if(!cubeFound && recognition.getTop() > 600 && recognition.getLeft() > 380) {
+                    if(!cubeFound && recognition.getTop() > 650 && recognition.getLeft() > 300) {
                         cubeFound = true;
                         return true;
                     }
@@ -315,6 +320,7 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
             backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
             liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
             armMotor = hardwareMap.get(DcMotor.class, "armMotor");
+            collectorMotor = hardwareMap.get(DcMotor.class, "collectorMotor");
 
             frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
             backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -330,6 +336,10 @@ public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
             backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            collectorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+            collectorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            collectorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
