@@ -67,11 +67,15 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
     double initialEncoder;
 
+    int silver1Position;
+    int silver2Position;
     int goldPositionLeft;
     int goldPositionTop;
 
     int rotations = 0;
 
+    boolean silver1Found = false;
+    boolean silver2Found = false;
     boolean cubeFound = false;
 
     @Override
@@ -125,121 +129,23 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
         setTimeStuff();
         MovingMotor motorMovement = new MovingMotor();
         FindingMinerals findingMinerals = new FindingMinerals();
-        WheelEncoder wheelEncoder = new WheelEncoder();
-
-        wheelEncoder.stop();
 
         if(opModeIsActive()){
 
-            while(Math.abs(armMotor.getCurrentPosition()) <= 1300 && opModeIsActive())
-                armMotor.setPower(-0.3);
-            armMotor.setPower(0);
+            String cubeLocation = "not_found";
+
+            while(opModeIsActive() && cubeLocation.equals("not_found")){
+                cubeLocation = goldLocation();
+            }
 
             while(Math.abs(liftMotor.getCurrentPosition()) <= 5900 && opModeIsActive()) {
                 liftMotor.setPower(1);
             }
 
-            armMotor.setPower(0);
             liftMotor.setPower(0);
 
-            originGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
-
-            findingMinerals.rotateFor(5, "right", 0.3,false);
-
-            motorMovement.stop();
-            wheelEncoder.start();
-            sleep(200);
-
+            findingMinerals.rotateFor(5,"right", 0.2);
             motorMovement.forwards(0.3, 300);
-
-            motorMovement.stop();
-            wheelEncoder.stop();
-            sleep(200);
-
-            findingMinerals.rotateFor(26, "right", 0.4,false);
-
-            motorMovement.stop();
-            sleep(200);
-
-            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(true);
-
-            while(!cubeFound && opModeIsActive()){
-
-                findingMinerals.rotateFor(80, "left", 0.2,true);
-
-                motorMovement.stop();
-                sleep(200);
-
-                if(!cubeFound && opModeIsActive()) {
-                    findingMinerals.rotateFor(80, "right", 0.2, true);
-
-                    motorMovement.stop();
-                    sleep(200);
-                }
-            }
-
-            com.vuforia.CameraDevice.getInstance().setFlashTorchMode(false);
-
-            motorMovement.stop();
-            sleep(200);
-
-            if(cubeFound){
-                motorMovement.stop();
-                wheelEncoder.start();
-                sleep(200);
-
-                if(Math.abs(currentGyro - initialGyro) <= 30 || Math.abs(currentGyro - initialGyro) >= 60){
-                    motorMovement.forwards(0.2, 2300);
-
-                    motorMovement.stop();
-                    wheelEncoder.stop();
-                    sleep(200);
-
-                    currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
-
-                    if(currentGyro > originGyro)
-                        findingMinerals.rotateFor(53, "right", 0.3, false);
-                    else findingMinerals.rotateFor(53, "left", 0.3, false);
-
-                    motorMovement.stop();
-                    wheelEncoder.start();
-                    sleep(200);
-
-                    motorMovement.forwards(0.3, 2000);
-
-                    motorMovement.stop();
-                    wheelEncoder.stop();
-                    sleep(200);
-                }
-                else {
-                    motorMovement.forwards(0.2, 4200);
-                    motorMovement.stop();
-                    wheelEncoder.stop();
-                    sleep(200);
-                }
-
-                if(markerServo.getPosition() > 0.9)
-                    markerServo.setPosition(0);
-                else markerServo.setPosition(1);
-
-                sleep(500);
-
-                if(markerServo.getPosition() > 0.9)
-                    markerServo.setPosition(0);
-                else markerServo.setPosition(1);
-
-                findingMinerals.rotateTo(100, 0.3);
-
-                motorMovement.stop();
-                wheelEncoder.start();
-                sleep(200);
-
-                motorMovement.forwards(0.3, 1100);
-
-                motorMovement.stop();
-                wheelEncoder.stop();
-                sleep(200);
-            }
 
             motorMovement.stop();
 
@@ -250,17 +156,15 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
     private class FindingMinerals{
         MovingMotor movingMotor = new MovingMotor();
 
-        private void rotateFor(double targetAngle, String rotationDirection, double rPower,boolean search){
+        private void rotateFor(double targetAngle, String rotationDirection, double rPower){
             resetGyro();
-            while(Math.abs(currentGyro - initialGyro) <= targetAngle && opModeIsActive() && (!search || !cubeFound)){
+            while(Math.abs(currentGyro - initialGyro) <= targetAngle && opModeIsActive()){
                 if(rotationDirection.equals("left"))
                     movingMotor.rotateLeft(rPower);
                 else if(rotationDirection.equals("right"))
                     movingMotor.rotateRight(rPower);
                 else movingMotor.stop();
                 currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
-                if(search)
-                    scanGold(tfod.getUpdatedRecognitions());
             }
         }
 
@@ -279,13 +183,6 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                     currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
                     movingMotor.rotateRight(rPower);
                 }
-            }
-        }
-
-        private void searchingForGold(){
-            timeStuff.reset();
-            while(timeStuff.milliseconds() <= 2000 && !scanGold(tfod.getUpdatedRecognitions()) && opModeIsActive() && !cubeFound){
-                movingMotor.stop();
             }
         }
     }
@@ -321,20 +218,39 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
         }
     }
 
-    boolean scanGold(List<Recognition> updatedRecognitions){
-        if(updatedRecognitions != null){
-            for(Recognition recognition : updatedRecognitions){
-                if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+    void scanGold(List<Recognition> updatedRecognitions){
+        if(updatedRecognitions != null) {
+            for (Recognition recognition : updatedRecognitions) {
+                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
                     goldPositionLeft = (int) recognition.getLeft();
                     goldPositionTop = (int) recognition.getTop();
-                    if(!cubeFound && recognition.getTop() < 1000 && recognition.getLeft() > 480) { /** get left= 460 get top = 760 **/
+                    if (!cubeFound && recognition.getTop() < 1000 && recognition.getLeft() > 480) { /** get left= 460 get top = 760 **/
                         cubeFound = true;
-                        return true;
                     }
+                }
+                else if(!silver1Found && recognition.getTop() < 1000) {
+                    silver1Position = (int) recognition.getLeft();
+                    silver1Found = true;
+                }
+                else if(!silver2Found && recognition.getTop() < 1000) {
+                    silver2Position = (int) recognition.getLeft();
+                    silver2Found = true;
                 }
             }
         }
-        return false;
+    }
+
+    String goldLocation(){
+        if(silver1Found && silver2Found && cubeFound){
+            if(goldPositionLeft < silver1Position && goldPositionLeft < silver2Position)
+                return ("left");
+            else if(goldPositionLeft < silver1Position && goldPositionLeft > silver2Position)
+                return ("center");
+            else return ("right");
+        }
+        else scanGold(tfod.getUpdatedRecognitions());
+
+        return "not_found";
     }
 
     public class Initialize{
@@ -386,16 +302,16 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         private void vuforiaInit(){
@@ -425,7 +341,9 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             backRightMotor.setPower(0);
         }
         public void forwards(double power, int targetEncoder) {
-            //gamepad1.dpad_up
+            WheelEncoder wheelEncoder = new WheelEncoder();
+
+            wheelEncoder.start();
             int initialEncoder = frontRightMotor.getCurrentPosition();
             while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
                 frontLeftMotor.setPower(power * 1.3);
@@ -433,9 +351,12 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 backLeftMotor.setPower(power * 1.3);
                 backRightMotor.setPower(power);
             }
+            wheelEncoder.stop();
         }
         public void backwards(double power, int targetEncoder) {
-            //gamepad1.dpad_down
+            WheelEncoder wheelEncoder = new WheelEncoder();
+
+            wheelEncoder.start();
             int initialEncoder = frontRightMotor.getCurrentPosition();
             while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
                 frontLeftMotor.setPower(-power * 1.3);
@@ -443,6 +364,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 backLeftMotor.setPower(-power * 1.3);
                 backRightMotor.setPower(-power);
             }
+            wheelEncoder.stop();
         }
         public void rotateRight(double power) {
             //gamepad1.left_stick_x>0
