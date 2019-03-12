@@ -71,6 +71,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
             telemetry.addData("Arm Base Encoder ", armBaseMotor.getCurrentPosition());
             telemetry.addData("Collector Motor Encoder ", collectorMotor.getCurrentPosition());
+            telemetry.addData("Gyro Z axis ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle);
             telemetry.update();
         }
 
