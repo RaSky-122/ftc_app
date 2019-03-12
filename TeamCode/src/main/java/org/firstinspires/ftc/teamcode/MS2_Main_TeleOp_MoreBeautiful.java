@@ -32,11 +32,10 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     private DcMotor backRightMotor;
     private DcMotor armMotor;
     private DcMotor liftMotor;
-    private DcMotor armBaseMotor;
+    private DcMotor armExtensionMotor;
     private Servo armBoxServo;
     private Servo armBoxServo2;
     private CRServo grabServo;
-    private DcMotor collectorMotor;
     private BNO055IMU imu;
 
     double power = 0.2;
@@ -60,17 +59,14 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         while(opModeIsActive()){
 
             servoStuff.grabServoArm();
-            gamepad2Motors.moveArmBaseMotor();
-            gamepad2Motors.moveCollectorMotor();
             servoStuff.moveBoxServo();
             gamepad2Motors.moveLiftMotor();
             gamepad2Motors.moveArmMotor();
+            gamepad2Motors.moveArmExtensionMotor();
             smoothMovement();
 
             telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
             telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
-            telemetry.addData("Arm Base Encoder ", armBaseMotor.getCurrentPosition());
-            telemetry.addData("Collector Motor Encoder ", collectorMotor.getCurrentPosition());
             telemetry.addData("Gyro Z axis ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle);
             telemetry.update();
         }
@@ -156,44 +152,28 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             }
         }
 
-        public void moveArmBaseMotor(){
-            if (gamepad2.dpad_right && (armBaseMotor.getCurrentPosition() < 940 || gamepad2.left_bumper)){
-                armBaseMotor.setPower(1);
-            }
-            else if(gamepad2.dpad_left && (armBaseMotor.getCurrentPosition() > 10 || gamepad2.left_bumper)){
-                armBaseMotor.setPower(-1);
-            }
-            else armBaseMotor.setPower(0);
-        }
-
-        public void moveCollectorMotor(){
-
-            if(gamepad2.dpad_up) {
-                collectorMotor.setPower(1);
-            }
-            else if(gamepad2.dpad_down) {
-                collectorMotor.setPower(-1);
-            }
-            else {
-                collectorMotor.setPower(0);
-            }
+        public void moveArmExtensionMotor(){
+            if(gamepad2.dpad_right)
+                armExtensionMotor.setPower(0.5);
+            else if(gamepad2.dpad_left)
+                armExtensionMotor.setPower(-0.5);
+            else armExtensionMotor.setPower(0);
         }
     }
 
     class Initialize{
 
         public void motorsInit(){
-            frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor");
-            frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
-            backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
-            backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
-            armMotor = hardwareMap.get(DcMotor.class, "armMotor");
-            liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
-            armBaseMotor = hardwareMap.get(DcMotor.class, "armBaseMotor");
-            armBoxServo = hardwareMap.get(Servo.class, "armBoxServo");
-            armBoxServo2 = hardwareMap.get(Servo.class, "armBoxServo2");
-            grabServo = hardwareMap.get(CRServo.class, "grabServo");
-            collectorMotor = hardwareMap.get(DcMotor.class, "collectorMotor");
+            frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
+            frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
+            backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
+            backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+            armMotor = hardwareMap.dcMotor.get("armMotor");
+            armExtensionMotor = hardwareMap.dcMotor.get("armExtensionMotor");
+            liftMotor = hardwareMap.dcMotor.get("liftMotor");
+            armBoxServo = hardwareMap.servo.get("armBoxServo");
+            armBoxServo2 = hardwareMap.servo.get("armBoxServo2");
+            grabServo = hardwareMap.crservo.get("grabServo");
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -209,7 +189,6 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
             armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            collectorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
             //armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -217,11 +196,8 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            collectorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            collectorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            armBaseMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            armBaseMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            armExtensionMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            armExtensionMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
