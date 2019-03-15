@@ -24,14 +24,25 @@ public class MovingMotor extends LinearOpMode {
     public void runOpMode(){
 
 
-        upperLeftMotor = hardwareMap.get(DcMotor.class, "upperLeftMotor");
-        upperRightMotor = hardwareMap.get(DcMotor.class, "upperRightMotor");
-        lowerLeftMotor = hardwareMap.get(DcMotor.class, "lowerLeftMotor");
-        lowerRightMotor = hardwareMap.get(DcMotor.class, "lowerRightMotor");
+        upperLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor");
+        upperRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
+        lowerLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
+        lowerRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
         double power;
         upperLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         lowerLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        upperLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        upperLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        upperRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        upperRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        lowerLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lowerLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        lowerRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lowerRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();
 
