@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.motors.NeveRest40Gearmotor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -10,6 +11,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImpl;
+import com.qualcomm.robotcore.hardware.configuration.annotations.MotorType;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
@@ -30,6 +33,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     private DcMotor frontRightMotor;
     private DcMotor backLeftMotor;
     private DcMotor backRightMotor;
+    private DcMotor collectorMotor;
     private DcMotor armMotor;
     private DcMotor liftMotor;
     private DcMotor armExtensionMotor;
@@ -40,6 +44,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
 
     double power = 0.2;
     double power2 = 0.75;
+    int directie = 0;
 
     double savedGyro = 0;
 
@@ -54,7 +59,10 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         ServoMovement servoStuff = new ServoMovement();
         Gamepad2Motors gamepad2Motors = new Gamepad2Motors();
 
-        waitForStart();/**vezi liftMotor encoder*/
+        while(!opModeIsActive() && !isStopRequested()){
+            telemetry.addData("Waiting for start ", "...");
+            telemetry.update();
+        }
 
         while(opModeIsActive()){
 
@@ -63,11 +71,15 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             gamepad2Motors.moveLiftMotor();
             gamepad2Motors.moveArmMotor();
             gamepad2Motors.moveArmExtensionMotor();
+            gamepad2Motors.collection();
             smoothMovement();
+
 
             telemetry.addData("Arm Encoder ", armMotor.getCurrentPosition());
             telemetry.addData("Lift Encoder ", liftMotor.getCurrentPosition());
-            telemetry.addData("Gyro Z axis ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle);
+            telemetry.addData("Extension Arm Encoder ", armExtensionMotor.getCurrentPosition());
+            telemetry.addData("Gyro INTRINSIC ", imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES));
+            telemetry.addData("Gyro EXTRINSIC ", imu.getAngularOrientation(AxesReference.EXTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES));
             telemetry.update();
         }
 
@@ -101,11 +113,8 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     public void smoothMovement(){
 
         frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
-
         backRightMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
-
         frontRightMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power-gamepad1.right_stick_x/2);
-
         backLeftMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power+gamepad1.right_stick_x/2);
 
         boolean motorsOn = false;
@@ -124,13 +133,10 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     class Gamepad2Motors{
 
         public  void moveLiftMotor(){
-            int armPosition = armMotor.getCurrentPosition();
             int liftPosition = liftMotor.getCurrentPosition();
 
-            if(-gamepad2.right_stick_y > 0 && (liftMotor.getCurrentPosition() < 5900 || gamepad2.left_bumper) && ((Math.abs(armPosition) >= 800 && liftPosition <= 2900) || Math.abs(armPosition) >= 1000))
-                liftMotor.setPower(1);
-            else if (-gamepad2.right_stick_y < 0 && ((liftPosition > 0 || gamepad2.left_bumper)))
-                liftMotor.setPower(-1);
+            if((((liftPosition < 5900 && -gamepad2.right_stick_y > 0) || liftPosition > 200 && -gamepad2.right_stick_y < 0))  || gamepad2.left_bumper)
+                liftMotor.setPower(-gamepad2.right_stick_y);
             else liftMotor.setPower(0);
 
             if(gamepad2.left_trigger > 0.8) {
@@ -153,11 +159,20 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         }
 
         public void moveArmExtensionMotor(){
-            if(gamepad2.dpad_right)
-                armExtensionMotor.setPower(0.5);
-            else if(gamepad2.dpad_left)
-                armExtensionMotor.setPower(-0.5);
+            if(gamepad2.dpad_up)
+                armExtensionMotor.setPower(1);
+            else if(gamepad2.dpad_down)
+                armExtensionMotor.setPower(-1);
             else armExtensionMotor.setPower(0);
+        }
+
+        public void collection(){
+            if(gamepad2.right_trigger > 0)
+                collectorMotor.setPower(1);
+            if(gamepad2.right_bumper)
+                collectorMotor.setPower(-1);
+            if(gamepad2.x)
+                collectorMotor.setPower(0);
         }
     }
 
@@ -168,12 +183,14 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
             backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
             backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+            collectorMotor = hardwareMap.dcMotor.get("collectorMotor");
             armMotor = hardwareMap.dcMotor.get("armMotor");
             armExtensionMotor = hardwareMap.dcMotor.get("armExtensionMotor");
             liftMotor = hardwareMap.dcMotor.get("liftMotor");
             armBoxServo = hardwareMap.servo.get("armBoxServo");
             armBoxServo2 = hardwareMap.servo.get("armBoxServo2");
             grabServo = hardwareMap.crservo.get("grabServo");
+
 
             frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -194,7 +211,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             //liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
             armExtensionMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             armExtensionMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
