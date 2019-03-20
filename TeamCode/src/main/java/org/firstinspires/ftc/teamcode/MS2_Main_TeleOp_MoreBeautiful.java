@@ -42,7 +42,7 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
     private CRServo grabServo;
     private BNO055IMU imu;
 
-    double power = 0.2;
+    double power = 0.75;
     double power2 = 0.75;
     int directie = 0;
 
@@ -109,25 +109,35 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         }
     }
 
-    
+
     public void smoothMovement(){
+        if (directie==0) {
+            if (gamepad1.b) {
+                directie = 1;
+                sleep(500);
+            }
+        }
+        if(directie==1) {
+            if (gamepad1.b) {
+                directie = 0;
+                sleep(500);
+            }
+        }
+        telemetry.addData("Directie", directie);
+        if(directie==1){
+            frontLeftMotor.setPower((((-gamepad1.left_stick_y)-gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
+            backRightMotor.setPower((((-gamepad1.left_stick_y)-gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
+            frontRightMotor.setPower(-(((-gamepad1.left_stick_y*2)+gamepad1.left_stick_x)/2)*power-gamepad1.right_stick_x/2);
+            backLeftMotor.setPower(-(((-gamepad1.left_stick_y*2)+gamepad1.left_stick_x)/2)*power+gamepad1.right_stick_x/2);
+        }
+        else if (directie==0){
+            frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
+            backRightMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
+            frontRightMotor.setPower((((-gamepad1.left_stick_y*2)-gamepad1.left_stick_x)/2)*power-gamepad1.right_stick_x/2);
+            backLeftMotor.setPower((((-gamepad1.left_stick_y*2)-gamepad1.left_stick_x)/2)*power+gamepad1.right_stick_x/2);
+        }
 
-        frontLeftMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power+gamepad1.right_stick_x/2);
-        backRightMotor.setPower((((-gamepad1.left_stick_y)+gamepad1.left_stick_x*2)/2)*power-gamepad1.right_stick_x/2);
-        frontRightMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power-gamepad1.right_stick_x/2);
-        backLeftMotor.setPower((((-gamepad1.left_stick_y)+(-gamepad1.left_stick_x*2))/2)*power+gamepad1.right_stick_x/2);
 
-        boolean motorsOn = false;
-
-        if(gamepad1.left_stick_x != 0 || gamepad1.left_stick_y != 0 || gamepad1.right_stick_x != 0)
-            motorsOn = true;
-
-        if(motorsOn && power < 0.8)
-            power += 0.04;
-        else if(motorsOn && power > 0.8)
-            power = 0.8;
-        else if(!motorsOn)
-            power = 0.2;
     }
 
     class Gamepad2Motors{
@@ -232,23 +242,34 @@ public class MS2_Main_TeleOp_MoreBeautiful extends LinearOpMode {
         }
 
         public void imuInit(){
-                imu = hardwareMap.get(BNO055IMU.class, "imu");
+            imu = hardwareMap.get(BNO055IMU.class, "imu");
 
-                BNO055IMU.Parameters params = new BNO055IMU.Parameters();
+            BNO055IMU.Parameters params = new BNO055IMU.Parameters();
 
-                params.mode                = BNO055IMU.SensorMode.IMU;
-                params.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-                params.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-                params.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-                params.loggingEnabled      = true;
-                params.loggingTag          = "IMU";
-                params.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+            params.mode                = BNO055IMU.SensorMode.IMU;
+            params.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+            params.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            params.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+            params.loggingEnabled      = true;
+            params.loggingTag          = "IMU";
+            params.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-                imu.initialize(params);
+            imu.initialize(params);
 
-                imu.startAccelerationIntegration(new Position(), new Velocity(), 500);
+            imu.startAccelerationIntegration(new Position(), new Velocity(), 500);
         }
 
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
