@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name = "OnlyWheels", group = "Simple")
-@Disabled
 
 public class MovingMotor extends LinearOpMode {
 
@@ -47,6 +46,12 @@ public class MovingMotor extends LinearOpMode {
         waitForStart();
 
         while(opModeIsActive()){
+
+            telemetry.addData("Front Right", upperRightMotor.getCurrentPosition());
+            telemetry.addData("Front Left", upperLeftMotor.getCurrentPosition());
+            telemetry.addData("Back Right", lowerRightMotor.getCurrentPosition());
+            telemetry.addData("Back Left", lowerLeftMotor.getCurrentPosition());
+            telemetry.update();
 
             if(gamepad1.right_bumper)
                 power = 0.15;

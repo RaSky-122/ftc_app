@@ -32,6 +32,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import java.util.List;
 
 @Autonomous(name = "Depozit", group = "Learning")
+@Disabled
 
 public class MS2_MainAutonomousOp_Depozit extends LinearOpMode {
 

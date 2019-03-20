@@ -69,14 +69,15 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
     int silver1Position;
     int silver2Position;
-    int goldPositionLeft;
-    int goldPositionTop;
+    int goldPosition;
 
     int rotations = 0;
 
     boolean silver1Found = false;
     boolean silver2Found = false;
     boolean cubeFound = false;
+
+    int elements = 0;
 
     @Override
     public void runOpMode() {
@@ -124,11 +125,20 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
         //beacons.activate();
         /**********************************************************************************************************************/
-        waitForStart();
+        while(!opModeIsActive() && !isStopRequested()){
+            telemetry.addData("Waiting for ", "start.");
+            telemetry.update();
+        }
+
+        telemetry.addData("Starting ", "hopefully.");
+        telemetry.update();
 
         setTimeStuff();
         MovingMotor motorMovement = new MovingMotor();
         FindingMinerals findingMinerals = new FindingMinerals();
+        WheelEncoder wheelEncoder = new WheelEncoder();
+
+        wheelEncoder.stop();
 
         if(opModeIsActive()){
 
@@ -144,8 +154,32 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
 
             liftMotor.setPower(0);
 
-            findingMinerals.rotateFor(5,"right", 0.2);
+            findingMinerals.rotateFor(5, "right", 0.3);
+
             motorMovement.forwards(0.3, 300);
+
+            switch (cubeLocation){
+                case "right": findingMinerals.rotateTo(-28, 0.3);break;
+                case "center": findingMinerals.rotateTo(-7, 0.3);break;
+                case "left": findingMinerals.rotateTo(27, 0.3);break;
+            }
+
+            if(cubeLocation.equals("center")) {
+                motorMovement.forwards(0.3,  950);
+                motorMovement.backwards(0.5, 400);
+            }
+            else if(cubeLocation.equals("left")) {
+                motorMovement.forwards(0.5, 1170);
+                motorMovement.backwards(0.5, 500);
+            }
+            else {
+                motorMovement.forwards(0.5, 1170);
+                motorMovement.backwards(0.5, 500);
+            }
+
+            findingMinerals.rotateTo(77, 0.3);
+
+            motorMovement.forwards(0.5, 2300);
 
             motorMovement.stop();
 
@@ -166,24 +200,25 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
                 else movingMotor.stop();
                 currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
             }
+            movingMotor.stop();
         }
 
-        private void rotateTo(double targetAngle, double rPower){
+        private void rotateTo(double targetAngle, double rPower) {
 
-            currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES). firstAngle;
+            currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
 
-            if(currentGyro < targetAngle){
-                while(currentGyro < targetAngle && opModeIsActive()){
+            if (currentGyro < targetAngle) {
+                while (currentGyro < targetAngle && opModeIsActive()) {
                     currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
                     movingMotor.rotateLeft(rPower);
                 }
-            }
-            else if(currentGyro > targetAngle){
-                while(currentGyro > targetAngle && opModeIsActive()){
+            } else if (currentGyro > targetAngle) {
+                while (currentGyro > targetAngle && opModeIsActive()) {
                     currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
                     movingMotor.rotateRight(rPower);
                 }
             }
+            movingMotor.stop();
         }
     }
 
@@ -218,37 +253,52 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
         }
     }
 
-    void scanGold(List<Recognition> updatedRecognitions){
+    int scanGold(List<Recognition> updatedRecognitions){
+        int i = 0;
         if(updatedRecognitions != null) {
             for (Recognition recognition : updatedRecognitions) {
-                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
-                    goldPositionLeft = (int) recognition.getLeft();
-                    goldPositionTop = (int) recognition.getTop();
-                    if (!cubeFound && recognition.getTop() < 1000 && recognition.getLeft() > 480) { /** get left= 460 get top = 760 **/
-                        cubeFound = true;
+                if (recognition.getLabel().equals(LABEL_GOLD_MINERAL) && !cubeFound && recognition.getTop() > 350) {
+                    goldPosition = (int) recognition.getLeft();
+                    cubeFound = true;
+                    i++;
                     }
-                }
-                else if(!silver1Found && recognition.getTop() < 1000) {
+                else if(recognition.getLabel().equals(LABEL_SILVER_MINERAL) && !silver1Found && recognition.getTop() > 350) {
                     silver1Position = (int) recognition.getLeft();
                     silver1Found = true;
+                    i++;
                 }
-                else if(!silver2Found && recognition.getTop() < 1000) {
+                else if(recognition.getLabel().equals(LABEL_SILVER_MINERAL) && !silver2Found && recognition.getTop() > 350) {
                     silver2Position = (int) recognition.getLeft();
                     silver2Found = true;
+                    i++;
                 }
             }
         }
+        return i;
     }
 
     String goldLocation(){
-        if(silver1Found && silver2Found && cubeFound){
-            if(goldPositionLeft < silver1Position && goldPositionLeft < silver2Position)
-                return ("left");
-            else if(goldPositionLeft < silver1Position && goldPositionLeft > silver2Position)
-                return ("center");
-            else return ("right");
+        if(elements == 2) {
+            if (silver1Found && silver2Found && !cubeFound)
+                return ("right");
+            else if (cubeFound && (silver1Found || silver2Found)) {
+                if (silver2Found)
+                    silver1Position = silver2Position;
+                if (goldPosition < silver1Position)
+                    return ("left");
+                else return ("center");
+            }
         }
-        else scanGold(tfod.getUpdatedRecognitions());
+        else if(elements == 3){
+            if(goldPosition < silver1Position && goldPosition < silver2Position)
+                return ("left");
+            else if(goldPosition > silver1Position && goldPosition > silver2Position)
+                return ("right");
+            else return ("center");
+        }
+        else {
+            elements = scanGold(tfod.getUpdatedRecognitions());
+        }
 
         return "not_found";
     }
@@ -292,6 +342,7 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
             liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -302,16 +353,16 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
         private void vuforiaInit(){
@@ -340,30 +391,136 @@ public class MS2_AutonomyExperimentation extends LinearOpMode {
             backLeftMotor.setPower(0);
             backRightMotor.setPower(0);
         }
-        public void forwards(double power, int targetEncoder) {
+        public void forwards(double maxPower, int targetEncoder) {
+            stop();
+
+            double initialGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+            currentGyro = initialGyro;
+
             WheelEncoder wheelEncoder = new WheelEncoder();
 
             wheelEncoder.start();
-            int initialEncoder = frontRightMotor.getCurrentPosition();
-            while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
-                frontLeftMotor.setPower(power * 1.3);
-                frontRightMotor.setPower(power);
-                backLeftMotor.setPower(power * 1.3);
-                backRightMotor.setPower(power);
+            //sleep(1000);
+            int initialEncoder = backRightMotor.getCurrentPosition();
+            int currentEncoder = backRightMotor.getCurrentPosition() - initialEncoder;
+            double errOffCourse;
+            double errOffCourse2 = 0;
+            double errOffCourseTotal;
+            double errDistance;
+
+            double kp = 0.055;
+            double kd = 0.0009;
+            double distanceCorrection = 0.0002;
+
+            frontLeftMotor.setPower(0.2);
+            frontRightMotor.setPower(0.2);
+            backLeftMotor.setPower(0.2);
+            backRightMotor.setPower(0.2);
+
+            while(currentEncoder <= targetEncoder && opModeIsActive()){
+
+                errOffCourse = currentGyro - initialGyro;
+
+                if(currentEncoder < targetEncoder/2)
+                    errDistance = currentEncoder;
+                else errDistance = targetEncoder - currentEncoder;
+
+                errOffCourseTotal = errOffCourse*kp + kd*(errOffCourse - errOffCourse2);
+
+                errDistance *= distanceCorrection;
+
+                if((0.2 + errOffCourse + errDistance > maxPower || 0.2 - errOffCourse + errDistance > maxPower) && maxPower != 0){
+                    frontLeftMotor.setPower(maxPower + errOffCourseTotal);
+                    if(maxPower < 1)
+                        frontRightMotor.setPower(maxPower + 0.1 - errOffCourseTotal);
+                    else frontRightMotor.setPower(maxPower - errOffCourseTotal);
+                    backLeftMotor.setPower(maxPower + errOffCourseTotal);
+                    backRightMotor.setPower(maxPower - errOffCourseTotal);
+                }
+                else {
+                    frontLeftMotor.setPower(0.2 + errOffCourseTotal + errDistance);
+                    frontRightMotor.setPower(0.3 - errOffCourseTotal + errDistance);
+                    backLeftMotor.setPower(0.2 + errOffCourseTotal + errDistance);
+                    backRightMotor.setPower(0.2 - errOffCourseTotal + errDistance);
+                }
+
+                currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+                currentEncoder = backRightMotor.getCurrentPosition() - initialEncoder;
+                errOffCourse2 = errOffCourse;
+
+                telemetry.addData("Encoder", currentEncoder);
+                telemetry.update();
             }
+
+            stop();
+
             wheelEncoder.stop();
         }
-        public void backwards(double power, int targetEncoder) {
+        public void backwards(double maxPower, int targetEncoder) {
+            stop();
+
+            if(maxPower > 0)
+                maxPower *= -1;
+            if(targetEncoder > 0)
+                targetEncoder *= -1;
+
             WheelEncoder wheelEncoder = new WheelEncoder();
+            double initialGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+            currentGyro = initialGyro;
 
             wheelEncoder.start();
-            int initialEncoder = frontRightMotor.getCurrentPosition();
-            while(Math.abs(frontRightMotor.getCurrentPosition() - initialEncoder) <= targetEncoder && opModeIsActive()){
-                frontLeftMotor.setPower(-power * 1.3);
-                frontRightMotor.setPower(-power);
-                backLeftMotor.setPower(-power * 1.3);
-                backRightMotor.setPower(-power);
+
+            int initialEncoder = backRightMotor.getCurrentPosition();
+            int currentEncoder = backRightMotor.getCurrentPosition() - initialEncoder;
+            double errOffCourse;
+            double errOffCourse2 = 0;
+            double errOffCourseTotal;
+            double errDistance;
+
+            double kp = 0.055;
+            double kd = 0.0009;
+            double distanceCorrection = 0.0002;
+
+            frontLeftMotor.setPower(-0.2);
+            frontRightMotor.setPower(-0.2);
+            backLeftMotor.setPower(-0.2);
+            backRightMotor.setPower(-0.2);
+
+            while(currentEncoder >= targetEncoder && opModeIsActive()){
+
+                errOffCourse = currentGyro - initialGyro;
+
+                if(currentEncoder >= targetEncoder/2)
+                    errDistance = currentEncoder;
+                else errDistance = targetEncoder - currentEncoder;
+
+                errOffCourseTotal =kp*errOffCourse + kd*(errOffCourse - errOffCourse2);
+
+                errDistance *= distanceCorrection;
+
+                if((-0.2 - errOffCourseTotal + errDistance > maxPower || -0.2 + errOffCourseTotal + errDistance > maxPower) && maxPower != 0){
+                    if(maxPower > -1)
+                        frontRightMotor.setPower(maxPower-0.1 - errOffCourseTotal);
+                    else frontRightMotor.setPower(maxPower - errOffCourseTotal);
+                    backRightMotor.setPower(maxPower - errOffCourseTotal);
+                    frontLeftMotor.setPower(maxPower + errOffCourseTotal);
+                    backLeftMotor.setPower(maxPower + errOffCourseTotal);
+                }else{
+                    frontRightMotor.setPower(-0.3 - errOffCourseTotal + errDistance);
+                    backRightMotor.setPower(-0.2 - errOffCourseTotal + errDistance);
+                    frontLeftMotor.setPower(-0.2 + errOffCourseTotal + errDistance);
+                    backLeftMotor.setPower(-0.2 + errOffCourseTotal + errDistance);
+                }
+
+                errOffCourse2 = errOffCourse;
+                currentEncoder = backRightMotor.getCurrentPosition() - initialEncoder;
+                currentGyro = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).firstAngle;
+
+                telemetry.addData("Encoder", currentEncoder);
+                telemetry.update();
             }
+            stop();
+
             wheelEncoder.stop();
         }
         public void rotateRight(double power) {

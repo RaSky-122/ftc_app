@@ -108,11 +108,11 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                                 lowerRightMotor.setPower(-power);
                             }*/
                         }
-                        else {
+                        else if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)){
                             telemetry.addData("Your princess is in another castle ", "hah " + recognition.getLeft() + " " + recognition.getTop());
                             telemetry.update();
                         }
-
+                        else telemetry.update();
                     }
                 }
             }
