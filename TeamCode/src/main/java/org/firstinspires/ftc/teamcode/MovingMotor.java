@@ -48,6 +48,12 @@ public class MovingMotor extends LinearOpMode {
 
         while(opModeIsActive()){
 
+            telemetry.addData("Front Right", upperRightMotor.getCurrentPosition());
+            telemetry.addData("Front Left", upperLeftMotor.getCurrentPosition());
+            telemetry.addData("Back Right", lowerRightMotor.getCurrentPosition());
+            telemetry.addData("Back Left", lowerLeftMotor.getCurrentPosition());
+            telemetry.update();
+
             if(gamepad1.right_bumper)
                 power = 0.15;
             else

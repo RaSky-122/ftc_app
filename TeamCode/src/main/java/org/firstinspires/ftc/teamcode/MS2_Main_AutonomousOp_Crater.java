@@ -31,6 +31,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import java.util.List;
 
 @Autonomous(name = "Crater", group = "Main")
+@Disabled
 
 public class MS2_Main_AutonomousOp_Crater extends LinearOpMode {
 

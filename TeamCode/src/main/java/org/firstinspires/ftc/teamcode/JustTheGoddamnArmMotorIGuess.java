@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp(name = "OnlyWheelMotors", group = "Simple")
+@Disabled
 
 public class JustTheGoddamnArmMotorIGuess extends LinearOpMode {
 
