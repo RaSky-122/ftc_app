@@ -87,7 +87,7 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                 if(updatedRecognitions != null){
                     for(Recognition recognition : updatedRecognitions) {
                         if (recognition.getLabel().equals(LABEL_GOLD_MINERAL) && recognition.getTop() > 600 && recognition.getLeft() > 250) {
-                            telemetry.addData("Uita-l ba", "yay " + recognition.getLeft() + " " + recognition.getTop());
+                            telemetry.addData("Uita-l ba", "yay " + recognition.getLeft() + " " + recognition.getBottom());
                             telemetry.update();
 
                             /*positionGold = (int) recognition.getLeft();
@@ -109,7 +109,11 @@ public class TensorFlowSeeingMineralsSperately extends LinearOpMode {
                             }*/
                         }
                         else if(recognition.getLabel().equals(LABEL_GOLD_MINERAL)){
+<<<<<<< HEAD
                             telemetry.addData("Your princess is in another castle ", "hah " + recognition.getLeft() + " " + recognition.getTop());
+=======
+                            telemetry.addData("Your princess is in another castle ", "hah " + recognition.getLeft() + " " + recognition.getBottom());
+>>>>>>> backups
                             telemetry.update();
                         }
                         else telemetry.update();
